@@ -8,4 +8,4 @@ Modalités d'évaluation pour l'affectation des apprenants aux parcours de spéc
 # Conception UML
 [diagramme de cas d'utilisation](https://drive.google.com/file/d/1mg2Y2MKpid26Yamo_gALMfze5iP3zPJD/view?usp=sharing)
 
-[diagrame de class](https://drive.google.com/file/d/1vyaGlgvz5xNXSUcg40dv8PtN48mwp-Yp/view?usp=sharing)
+[diagrame de class](https://drive.google.com/file/d/1BDbL3iaUDKV1-ATeb4GY4vjntsmLOHER/view?usp=sharing)
