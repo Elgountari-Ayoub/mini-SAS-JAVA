@@ -12,11 +12,14 @@ public interface BookInterface {
 
     public boolean update(Book book)
             throws SQLException;
+
     public boolean delete(int id)
             throws SQLException;
+
     public Book getBook(int id)
             throws SQLException;
-    public List<Book> getBooks()
+
+    public  List<Book> getBooks()
             throws SQLException;
 
 }

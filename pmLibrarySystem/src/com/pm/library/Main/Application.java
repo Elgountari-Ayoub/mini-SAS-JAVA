@@ -2,25 +2,28 @@ package com.pm.library.Main;
 
 import com.pm.library.dao.implementations.BookImplementation;
 import com.pm.library.dao.implementations.BookReferenceImplementation;
+import com.pm.library.dao.implementations.BorrowedBookImplementation;
 import com.pm.library.dao.implementations.MemberImplementation;
 import com.pm.library.model.Book;
 import com.pm.library.model.BookReference;
+import com.pm.library.model.BorrowedBook;
 import com.pm.library.model.Member;
 
-import javax.sound.midi.MetaMessage;
-import java.rmi.server.ExportException;
 import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Application {
-    private static BookReference bookReference;
+    private static BookReference bookReference = new BookReference();
     private static BookReferenceImplementation bookReferenceImp = new BookReferenceImplementation();
 
-    private static Book book;
+    private static Book book = new Book();
     private static BookImplementation bookImp = new BookImplementation();
 
-    private static Member member;
+    private static Member member = new Member();
     private static MemberImplementation memberImp = new MemberImplementation();
+
+    private static BorrowedBook borrowedBook;
+    private static BorrowedBookImplementation borrowedBookImp = new BorrowedBookImplementation();
 
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -256,9 +259,9 @@ public class Application {
                         case 2:
                             String phoneNumber = takeStringInputValue("Enter The Member Phone Number to update: ");
                             try {
-                                boolean isMemberExist = MemberImplementation.getMemberByPhone(phoneNumber) != null;
+                                boolean isMemberExist = memberImp.getMemberByPhone(phoneNumber) != null;
                                 if (isMemberExist) {
-                                    member = new Member(MemberImplementation.getMemberByPhone(phoneNumber));
+                                    member = new Member(memberImp.getMemberByPhone(phoneNumber));
                                     UPDATE_MEMBER_MENU();
                                     choice = takeIntInputValue("Enter a choice");
                                     switch (choice) {
@@ -367,11 +370,11 @@ public class Application {
                         case 3:
                             phoneNumber = takeStringInputValue("Enter The Member Phone Number to delete: ");
                             try {
-                                boolean isMemberExist = MemberImplementation.getMemberByPhone(phoneNumber) != null;
+                                boolean isMemberExist = memberImp.getMemberByPhone(phoneNumber) != null;
                                 if (isMemberExist) {
                                     boolean operationConfirmed = confirmation("Confirm the delete operation(Y/N)");
                                     if (operationConfirmed) {
-                                        member = new Member(MemberImplementation.getMemberByPhone(phoneNumber));
+                                        member = new Member(memberImp.getMemberByPhone(phoneNumber));
                                         if (memberImp.delete(member.getId())) {
                                             System.out.println(greenText("The member deleted successfully :)"));
                                         } else {
@@ -392,16 +395,23 @@ public class Application {
                             break;
                     }
                     break;
-                    // Get A Book By ISBN
+                // Get A Book By ISBN
                 case 3:
                     try {
-                        String isbn = takeStringInputValue("Enter the book ISBN: ");
-                        bookReference = bookReferenceImp.getBookReference(isbn);
-                        if (bookReference != null) {
-                            System.out.println(greenText("\n" + bookReference.toString() + "\n"));
-                        } else {
-                            System.out.println(yellowText("There is no book with this ISBN in this library"));
-                        }
+                        String isbn;
+                        do {
+                            isbn = takeStringInputValue("Enter The Book isbn: ");
+                            bookReference = bookReferenceImp.getBookReference(isbn);
+                            if (bookReference == null) {
+                                System.out.println(yellowText("No book found with this isbn in this library..!, try another one."));
+                                if (confirmation("Cancel the operation(Y/N)?")) {
+                                    break;
+                                }
+                            } else {
+                                System.out.println(greenText("\n" + bookReference.toString() + "\n"));
+
+                            }
+                        } while (bookReference == null);
                     } catch (Exception e) {
                         System.out.println(yellowText(e.getMessage()));
                     }
@@ -414,14 +424,21 @@ public class Application {
                         String phoneNumber;
                         do {
                             phoneNumber = takeStringInputValue("Enter The Member phone number: ");
-                            member = MemberImplementation.getMemberByPhone(phoneNumber);
+                            member = memberImp.getMemberByPhone(phoneNumber);
                             if (member == null) {
                                 System.out.println(yellowText("This phone number not exist!, try another one."));
+                                if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
+                                    break;
+                                }
                             }
+
                         } while (member == null);
+                        if (member == null) {
+                            break;
+                        }
 
                         // Check if the member does not borrow any book
-                        if (MemberImplementation.hasBook(member)){
+                        if (memberImp.hasBook(member)) {
                             System.out.println(yellowText("This member already have a book"));
                             pressToContinue();
                             break;
@@ -434,16 +451,38 @@ public class Application {
                             bookReference = bookReferenceImp.getBookReference(isbn);
                             if (bookReference == null) {
                                 System.out.println(yellowText("No book found with this isbn in this library..!, try another one."));
+                                if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
+                                    break;
+                                }
                             }
+
                         } while (bookReference == null);
 
                         // Ckeck the book quantity
-                        if (bookReference.getQuantity() > 0){
-                            // get the 1st book you will meet in the books table with given ISBN and available status.
-                            book = new Book(BookImplementation.findAvailableBookByISBN(isbn));
+                        if (bookReference.getQuantity() > 0) {
+                            // get the 1st book you will meet in the books table with the given ISBN and available status.
+                            book = new Book(BookImplementation.getAvailableBookByISBN(isbn));
 
-                            MemberImplementation.borrow(member, book);
-                        }else{
+                            int borrowingDays = takeIntInputValue("Enter the borrowing days: ");
+
+                            System.out.println("Borrow the following book: ");
+                            System.out.println(greenText(book.toString()));
+
+                            System.out.println("To the following member: ");
+                            System.out.println(greenText(member.toString()));
+
+                            if (confirmation("\nConfirm the borrowing operation(Y/N)?")) {
+                                if(borrowedBookImp.add(member.getId(), book.getId(), borrowingDays)){
+                                    System.out.println(greenText("The borrowed successfully :)"));
+                                }
+                                else {
+                                    System.out.println(yellowText("Something is wrong, Call MR.PM :)"));
+                                }
+                            } else {
+                                pressToContinue();
+                                break;
+                            }
+                        } else {
                             System.out.println(yellowText("This book wasn't available for the moment :<"));
                             pressToContinue();
                             break;
@@ -451,6 +490,55 @@ public class Application {
                     } catch (Exception e) {
                         System.out.println(yellowText(e.getMessage()));
                     }
+                    break;
+                case 6:
+                    try {
+                        // Take the borrower phone number
+                        String phoneNumber;
+                        do {
+                            phoneNumber = takeStringInputValue("Enter The Member phone number: ");
+                            member = memberImp.getMemberByPhone(phoneNumber);
+                            if (member == null) {
+                                System.out.println(yellowText("This phone number not exist!, try another one."));
+                                if (confirmation("Cancel the operation(Y/N)?")) {
+                                    break;
+                                }
+                            }
+
+                        } while (member == null);
+
+                        // Check if the member borrowing any book
+                        if (!(memberImp.hasBook(member))) {
+                            System.out.println(yellowText("This member doesn't borrow a book"));
+                            pressToContinue();
+                            break;
+                        }
+
+                        // Get the borrowed book by the member phone
+                        borrowedBook = new BorrowedBook(borrowedBookImp.getBorrowedBookByMember(member));
+
+
+                        book = new Book(bookImp.getBook(borrowedBook.getBookId()));
+                        bookReference = new BookReference(bookReferenceImp.getBookReference(book.getIsbn()));
+                        System.out.println("\nYou want to return the following book:");
+                        System.out.println(greenText(bookReference.toString()));
+
+                        System.out.println("\nfrom the following member");
+                        System.out.println(greenText(member.toString()));
+                        if (confirmation("\nConfirm the operation(Y/N)?")) {
+                            // return the book
+                            if (borrowedBookImp.delete(borrowedBook.getId())) {
+                                System.out.println(greenText("The book returned successfully :)"));
+                            } else {
+                                System.out.println("Something is wrong, Call Mr.PM..!");
+                            }
+                        } else {
+                            System.out.println("The return operation was canceled :<");
+                        }
+                    } catch (Exception e) {
+                        System.out.println(yellowText(e.getMessage()));
+                    }
+                    pressToContinue();
                     break;
                 case 8:
                     System.out.println("THANKS FOR THE VISIT...!");
@@ -522,7 +610,9 @@ public class Application {
                 scanner.nextLine();
             } catch (java.util.InputMismatchException e) {
                 scanner.next();
-                System.out.println("invalid input(must be a positive number)!");
+            }
+            if (inputValue < 1) {
+                System.out.println(yellowText("invalid input(must be a positive number)!"));
             }
         } while (inputValue < 1);
         return inputValue;
@@ -597,10 +687,10 @@ public class Application {
 
         do {
             phoneNumber = takeStringInputValue("Enter The Member phone number: ");
-            if (MemberImplementation.getMemberByPhone(phoneNumber) != null) {
+            if (memberImp.getMemberByPhone(phoneNumber) != null) {
                 System.out.println(yellowText("This phone number already exist!, try another one."));
             }
-        } while (MemberImplementation.getMemberByPhone(phoneNumber) != null);
+        } while (memberImp.getMemberByPhone(phoneNumber) != null);
 
 
         address = takeStringInputValue("Enter The Member address: ");

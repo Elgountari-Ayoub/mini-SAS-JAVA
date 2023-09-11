@@ -6,12 +6,14 @@ import com.pm.library.model.Member;
 import com.pm.library.util.DatabaseConnection;
 
 import java.sql.Connection;
-import java.sql.Date;
+import java.util.Date;
+
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
+
 
 public class MemberImplementation implements MemberInterface {
     static Connection con = DatabaseConnection.getConnection();
@@ -127,7 +129,7 @@ public class MemberImplementation implements MemberInterface {
         return false;
     }
 
-    public static Member getMemberByPhone(String phoneNumber) throws SQLException {
+    public  Member getMemberByPhone(String phoneNumber) throws SQLException {
         String sql = "SELECT * FROM members WHERE phone = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -140,7 +142,6 @@ public class MemberImplementation implements MemberInterface {
                 String address = resultSet.getString("address");
                 System.out.println();
                 Member member = new Member(id, name, phoneNumber, address);
-                System.out.println(member.toString());
                 return member;
             } else {
                 return null;
@@ -154,15 +155,19 @@ public class MemberImplementation implements MemberInterface {
         return null;
     }
 
-    public static boolean borrow(Member member, Book book) {
-        String sql = "INSERT INTO borrowedbooks (memberid, bookid, borrowDate) VALUES (?, ?, CURDATE())";
-
+    public static boolean borrow(Member member, Book book, int borrowingDays) {
+        String sql = "INSERT INTO borrowedbooks (memberid, bookid, borrowDate, returnDate) VALUES (?, ?, CURDATE(), ?)";
         try {
+
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, member.getId());
             ps.setInt(2, book.getId());
 
-
+            Date currentDate;
+            currentDate = new Date();
+            long returnDateMillis = currentDate.getTime() + ((long) borrowingDays * 24 * 60 * 60 * 1000);
+            java.sql.Date returnDate = new java.sql.Date(returnDateMillis);
+            ps.setDate(3, returnDate);
 
             int rowsAffected = ps.executeUpdate();
 
@@ -173,7 +178,7 @@ public class MemberImplementation implements MemberInterface {
         }
     }
 
-    public static boolean hasBook(Member member) {
+    public  boolean hasBook(Member member) {
         String sql = "SELECT count(*) as 'count' from borrowedbooks bb WHERE bb.memberId = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);

@@ -16,22 +16,26 @@ public class BookReference {
     // CONSTRUCTORS
     public BookReference() {
     }
+
     public BookReference(String isbn, String title, String author, int quantity) {
         this.isbn = isbn;
         this.title = title;
         this.author = author;
         this.quantity = quantity;
     }
+
     public BookReference(String title, String author, int quantity) {
         this.title = title;
         this.author = author;
         this.quantity = quantity;
     }
+
     public BookReference(String isbn, String title, String author) {
         this.isbn = isbn;
         this.title = title;
         this.author = author;
     }
+
     public BookReference(BookReference bookReference) {
         this.isbn = bookReference.isbn;
         this.title = bookReference.title;
@@ -72,22 +76,17 @@ public class BookReference {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-    public void incrementQuantity(int quantity){
+
+    public void incrementQuantity(int quantity) {
         this.quantity += quantity;
 
     }
 
     @Override
-    public String toString(){
-        String format = "| %-15s | %-30s | %-20s | %-10d |%n";
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("+-----------------+--------------------------------+----------------------+------------+%n");
-        sb.append("| ISBN            | Title                          | Author               | Quantity   |%n");
-        sb.append("+-----------------+--------------------------------+----------------------+------------+%n");
-        sb.append(String.format(format, isbn, title, author, quantity));
-        sb.append("+-----------------+--------------------------------+----------------------+------------+%n");
-
-        return sb.toString();
+    public String toString() {
+        return "ISBN: " + this.isbn +
+                "\t Title: " + this.title +
+                "\t Author: " + this.author +
+                "\t Quantity: " + this.quantity;
     }
 }

@@ -53,5 +53,12 @@ public class Book {
     public void setStatus(String status) {
         this.status = status;
     }
+    @Override
+    public String toString() {
+        return "ISBN: " + this.isbn +
+                "\t Title: " + this.id +
+                "\t Author: " + this.isbn +
+                "\t Quantity: " + this.status;
+    }
 
 }

@@ -1,10 +1,7 @@
 package com.pm.library.dao.implementations;
 
 import com.pm.library.dao.interfaces.BookInterface;
-import com.pm.library.dao.interfaces.BookReferenceInterface;
 import com.pm.library.model.Book;
-import com.pm.library.model.BookReference;
-import com.pm.library.model.Member;
 import com.pm.library.util.DatabaseConnection;
 
 import java.sql.Connection;
@@ -18,7 +15,7 @@ import java.util.Objects;
 public class BookImplementation implements BookInterface {
     static Connection con = DatabaseConnection.getConnection();
 
-    public static Book findAvailableBookByISBN(String isbn) {
+    public static Book getAvailableBookByISBN(String isbn) {
         ResultSet resultSet = null;
         try {
             String sql = "SELECT * FROM books WHERE isbn = ? AND status = 'available' LIMIT 1";
@@ -45,7 +42,7 @@ public class BookImplementation implements BookInterface {
 
     // CRUD OPERATIONS
     @Override
-    public boolean add(Book book) {
+    public  boolean add(Book book) {
         // Check if the book reference already exist ?
         String sql = "INSERT INTO books (isbn, status) VALUES (?, ?) ";
         try {
@@ -64,7 +61,7 @@ public class BookImplementation implements BookInterface {
     }
 
     @Override
-    public boolean update(Book book) {
+    public  boolean update(Book book) {
         String sql = "UPDATE booksReference SET status=?  WHERE id=?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -86,7 +83,7 @@ public class BookImplementation implements BookInterface {
     }
 
     @Override
-    public boolean delete(int id) {
+    public  boolean delete(int id) {
         String sql = "DELETE FROM books WHERE id=?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -104,7 +101,7 @@ public class BookImplementation implements BookInterface {
 
 
     @Override
-    public Book getBook(int id) throws SQLException {
+    public  Book getBook(int id) throws SQLException {
         String sql = "SELECT * FROM books WHERE id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -129,7 +126,7 @@ public class BookImplementation implements BookInterface {
     }
 
     @Override
-    public List<Book> getBooks() throws SQLException {
+    public  List<Book> getBooks() throws SQLException {
         List<Book> books = new ArrayList<>();
         String sql = "SELECT * FROM books";
 
@@ -177,46 +174,6 @@ public class BookImplementation implements BookInterface {
     }
 
     // HELPER METHODS
-    public static BookReference getBookByTitleAndAuthor(String title, String author) {
-        String sql = "SELECT * FROM booksReference WHERE title = ? AND author = ?";
-        try {
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, title);
-            ps.setString(2, author);
-            ResultSet resultSet = ps.executeQuery();
-
-            if (resultSet.next()) {
-                String isbn = resultSet.getString("isbn");
-                int quantity = resultSet.getInt("quantity");
-                return new BookReference(isbn, title, author, quantity);
-            } else {
-                return null;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting book by title and author: " + e.getMessage());
-            return null;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
-    }
-
-    public boolean borrow(Member member) {
-        try {
-//            check if the member has no books for the moment
-
-//            check if the book not borrowed for the moment
-
-//            affect the book to the member in borrowedbooks table
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-
-
     public boolean isBookBorrowed(Book book) {
         try {
             return Objects.equals((getBook(book.getId())).getStatus(), "borrowed");
