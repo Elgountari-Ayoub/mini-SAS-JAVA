@@ -125,7 +125,6 @@ public class BorrowedBookImplementation implements BorrowedBookInterface {
     public  List<BorrowedBook> getBorrowedBooks() throws SQLException {
         List<BorrowedBook> borrowedBooks = new ArrayList<>();
         String sql = "SELECT * FROM borrowedBooks";
-
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet resultSet = ps.executeQuery();

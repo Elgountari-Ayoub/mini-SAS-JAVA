@@ -6,6 +6,7 @@ import com.pm.library.model.Member;
 import com.pm.library.util.DatabaseConnection;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -108,28 +109,34 @@ public class MemberImplementation implements MemberInterface {
 
     @Override
     public List<Member> getMembers() throws SQLException {
-        return null;
-    }
+        List<Member> members = new ArrayList<>();
+        String sql = "Select * from members";
 
-    // METHOD HELPERS
-    public static boolean isMemberExist(int id) {
-        String sql = "SELECT COUNT(*) as 'count' FROM members WHERE id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
 
-            ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
-                int count = resultSet.getInt("count");
-                return count > 0;
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                String phoneNumber = resultSet.getString("phone");
+                String address = resultSet.getString("address");
+
+                Member member = new Member(id, name, phoneNumber, address);
+                members.add(member);
             }
+            return members;
         } catch (SQLException e) {
-            System.err.println("Error getting the member count: " + e.getMessage());
+            System.err.println("Error getting books: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        return false;
+        return null;
     }
 
-    public  Member getMemberByPhone(String phoneNumber) throws SQLException {
+
+    public Member getMemberByPhone(String phoneNumber) throws SQLException {
         String sql = "SELECT * FROM members WHERE phone = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -155,30 +162,8 @@ public class MemberImplementation implements MemberInterface {
         return null;
     }
 
-    public static boolean borrow(Member member, Book book, int borrowingDays) {
-        String sql = "INSERT INTO borrowedbooks (memberid, bookid, borrowDate, returnDate) VALUES (?, ?, CURDATE(), ?)";
-        try {
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setInt(1, member.getId());
-            ps.setInt(2, book.getId());
-
-            Date currentDate;
-            currentDate = new Date();
-            long returnDateMillis = currentDate.getTime() + ((long) borrowingDays * 24 * 60 * 60 * 1000);
-            java.sql.Date returnDate = new java.sql.Date(returnDateMillis);
-            ps.setDate(3, returnDate);
-
-            int rowsAffected = ps.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            System.err.println("Error borrowing the book: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public  boolean hasBook(Member member) {
+    public boolean hasBook(Member member) {
         String sql = "SELECT count(*) as 'count' from borrowedbooks bb WHERE bb.memberId = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);

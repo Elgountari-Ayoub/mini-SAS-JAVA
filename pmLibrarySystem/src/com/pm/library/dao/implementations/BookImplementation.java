@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -126,7 +127,8 @@ public class BookImplementation implements BookInterface {
     }
 
     @Override
-    public  List<Book> getBooks() throws SQLException {
+    public  List<Book> getBooks() throws SQLException
+    {
         List<Book> books = new ArrayList<>();
         String sql = "SELECT * FROM books";
 
@@ -144,41 +146,75 @@ public class BookImplementation implements BookInterface {
             }
         } catch (SQLException e) {
             System.err.println("Error getting books: " + e.getMessage());
-            // You can throw or handle the exception as needed
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
-            // You can throw or handle the exception as needed
-        } finally {
-            // Close resources like PreparedStatement and ResultSet here if necessary
         }
 
         return books;
     }
 
     // METHOD HELPERS
-    public static boolean isBookExist(int id) {
-        String sql = "SELECT COUNT(*) as 'count' FROM books WHERE id = ?";
+
+    public List<Book> getMissingBooks() throws SQLException {
+        List<Book> missingBooks = new ArrayList<>();
         try {
+            String sql = "Select * from books where status = 'lost'";
             PreparedStatement ps = con.prepareStatement(sql);
 
-            ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
-                int count = resultSet.getInt("count");
-                return count > 0;
+            while (resultSet.next()){
+                int id = resultSet.getInt("id");
+                String isbn = resultSet.getString("isbn");
+                String status = resultSet.getString("status"); // must be lost HHHH
+
+                Book book = new Book(id, isbn, status);
+                missingBooks.add(book);
             }
-        } catch (SQLException e) {
-            System.err.println("Error getting the book count: " + e.getMessage());
+            return missingBooks;
+        }catch (SQLException e){
+            System.out.println("Sql Error:" + e.getMessage());
+        }catch (Exception e){
+            System.out.println(e.getMessage());
         }
-        return false;
+        return missingBooks;
     }
 
-    // HELPER METHODS
-    public boolean isBookBorrowed(Book book) {
+    public List<Book> getBorrowedBooks() throws SQLException {
+        List<Book> missingBooks = new ArrayList<>();
         try {
-            return Objects.equals((getBook(book.getId())).getStatus(), "borrowed");
-        } catch (Exception e) {
-            return false;
+            String sql = "Select * from books where status = 'borrowed'";
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()){
+                int id = resultSet.getInt("id");
+                String isbn = resultSet.getString("isbn");
+                String status = resultSet.getString("status"); // must be lost HHHH
+
+                Book book = new Book(id, isbn, status);
+                missingBooks.add(book);
+            }
+            return missingBooks;
+        }catch (SQLException e){
+            System.out.println("Sql Error:" + e.getMessage());
+        }catch (Exception e){
+            System.out.println(e.getMessage());
         }
+        return missingBooks;
+    }
+
+    public String generateReport(){
+        try {
+            int booksCount = this.getBooks().size();
+            int borrowedBooksCount = this.getBorrowedBooks().size();
+            int missingBooksCount = this.getMissingBooks().size();
+            return
+                    "\n\t\tAvailable books = "+ booksCount +
+                            "\n\t\tBorrowed Books = " + borrowedBooksCount +
+                            "\n\t\tMissing Books = " + missingBooksCount + "\n";
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return "No data available";
     }
 }

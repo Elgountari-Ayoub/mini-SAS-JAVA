@@ -10,34 +10,32 @@ import com.pm.library.model.BorrowedBook;
 import com.pm.library.model.Member;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Application {
     private static BookReference bookReference = new BookReference();
     private static BookReferenceImplementation bookReferenceImp = new BookReferenceImplementation();
-
     private static Book book = new Book();
     private static BookImplementation bookImp = new BookImplementation();
-
     private static Member member = new Member();
     private static MemberImplementation memberImp = new MemberImplementation();
-
     private static BorrowedBook borrowedBook;
     private static BorrowedBookImplementation borrowedBookImp = new BorrowedBookImplementation();
-
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        BookReferenceImplementation.updateBookStatus();
 
         int choice;
         do {
             MAIN_MENU();
-            choice = takeUserChoice();
+            choice = takeUserChoice(1, 9);
             switch (choice) {
                 // Books Management Menu
                 case 1:
                     BOOK_MENU();
-                    choice = takeUserChoice();
+                    choice = takeUserChoice(1, 3);
                     switch (choice) {
                         // Add A Book
                         case 1:
@@ -62,7 +60,7 @@ public class Application {
                                         }
                                     }
                                 } else {
-                                    if (confirmation("Agree to save the book(Y/N)?")) {
+                                    if (confirmation(yellowText("Agree to save the book(Y/N)?"))) {
                                         boolean isAdded = bookReferenceImp.add(bookReference);
                                         if (isAdded) {
                                             for (int i = 0; i < bookReference.getQuantity(); i++) {
@@ -87,113 +85,121 @@ public class Application {
                             break;
                         // Update An Existing Book
                         case 2:
-                            String isbn = takeStringInputValue("Enter The Book ISBN to update: ");
+//                            String isbn = takeStringInputValue("Enter The Book ISBN to update: ");
+                            String isbn;
                             try {
-                                boolean exist = BookReferenceImplementation.isBookReferenceExist(isbn);
-                                if (exist) {
-                                    UPDATE_BOOK_MENU();
-                                    choice = takeIntInputValue("Enter a choice");
-                                    bookReference = new BookReference(bookReferenceImp.getBookReference(isbn));
-                                    switch (choice) {
-                                        //Update all info
-                                        case 1:
-                                            try {
-                                                String newTitle = takeStringInputValue("Enter the new title: ");
-                                                String newAuthor = takeStringInputValue("Enter the new author: ");
-                                                int incrementQuantity = takeIntInputValue("Increment the quantity: ");
-
-                                                bookReference.setTitle(newTitle);
-                                                bookReference.setAuthor(newAuthor);
-                                                bookReference.incrementQuantity(incrementQuantity);
-
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
-                                                if (operationConfirmed) {
-                                                    boolean bookUpdated = bookReferenceImp.update(bookReference);
-                                                    if (bookUpdated) {
-                                                        System.out.println(greenText("Book updated successfully"));
-                                                    } else {
-                                                        System.err.println(yellowText("Something wrong please try again"));
-                                                    }
-                                                } else {
-                                                    System.out.println(yellowText("The operation canceled :("));
-                                                }
-
-                                            } catch (Exception e) {
-                                                System.err.println("Error updating the book");
-                                            }
-                                            pressToContinue();
+                                do {
+                                    isbn = takeStringInputValue("Enter The Book isbn to update: ");
+                                    bookReference = bookReferenceImp.getBookReference(isbn);
+                                    if (bookReference == null) {
+                                        System.out.println(yellowText("No book found with this isbn in this library..!, try another one."));
+                                        if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
                                             break;
-                                        // Update the book title
-                                        case 2:
-                                            try {
-                                                String newTitle = takeStringInputValue("Enter the new title: ");
-                                                bookReference.setTitle(newTitle);
-
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
-                                                if (operationConfirmed) {
-                                                    boolean bookUpdated = bookReferenceImp.update(bookReference);
-                                                    if (bookUpdated) {
-                                                        System.out.println(greenText("Book updated successfully"));
-                                                    } else {
-                                                        System.err.println(yellowText("Something wrong please try again"));
-                                                    }
-                                                } else {
-                                                    System.out.println(yellowText("The operation canceled :("));
-                                                }
-                                            } catch (Exception e) {
-                                                System.err.println("Error updating the book title");
-                                            }
-                                            pressToContinue();
-                                            break;
-                                        // Update the book author
-                                        case 3:
-                                            try {
-                                                String newAuthor = takeStringInputValue("Enter the new author: ");
-                                                bookReference.setAuthor(newAuthor);
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
-                                                if (operationConfirmed) {
-                                                    boolean bookUpdated = bookReferenceImp.update(bookReference);
-                                                    if (bookUpdated) {
-                                                        System.out.println(greenText("Book updated successfully"));
-                                                    } else {
-                                                        System.err.println(yellowText("Something wrong please try again"));
-                                                    }
-                                                } else {
-                                                    System.out.println(yellowText("The operation canceled :("));
-                                                }
-                                            } catch (Exception e) {
-                                                System.err.println("Error updating the book");
-                                            }
-                                            pressToContinue();
-                                            break;
-                                        // Update the quantity
-                                        case 4:
-                                            try {
-                                                int incrementQuantity = takeIntInputValue("Increment the quantity: ");
-                                                bookReference.incrementQuantity(incrementQuantity);
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
-                                                if (operationConfirmed) {
-                                                    boolean bookUpdated = bookReferenceImp.update(bookReference);
-                                                    if (bookUpdated) {
-                                                        System.out.println(greenText("Book quantity updated successfully"));
-                                                    } else {
-                                                        System.err.println(yellowText("Something wrong please try again"));
-                                                    }
-                                                } else {
-                                                    System.out.println(yellowText("The operation canceled :("));
-                                                }
-                                            } catch (Exception e) {
-                                                System.err.println("Error updating the book quantity");
-                                            }
-                                            pressToContinue();
-                                            break;
-                                        default:
-                                            break;
+                                        }
                                     }
-                                } else {
-                                    System.out.println(yellowText("There is no book with this ISBN in this library!"));
-                                    pressToContinue();
+                                } while (bookReference == null);
+                                if (bookReference == null) {
+                                    break;
+                                }
 
+                                UPDATE_BOOK_MENU();
+                                choice = takeIntInputValue("Enter a choice");
+                                bookReference = new BookReference(bookReferenceImp.getBookReference(isbn));
+                                switch (choice) {
+                                    //Update all info
+                                    case 1:
+                                        try {
+                                            String newTitle = takeStringInputValue("Enter the new title: ");
+                                            String newAuthor = takeStringInputValue("Enter the new author: ");
+                                            int incrementQuantity = takeIntInputValue("Increment the quantity: ");
+
+                                            bookReference.setTitle(newTitle);
+                                            bookReference.setAuthor(newAuthor);
+                                            bookReference.incrementQuantity(incrementQuantity);
+
+                                            boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
+                                            if (operationConfirmed) {
+                                                boolean bookUpdated = bookReferenceImp.update(bookReference);
+                                                if (bookUpdated) {
+                                                    System.out.println(greenText("Book updated successfully"));
+                                                } else {
+                                                    System.err.println(yellowText("Something wrong please try again"));
+                                                }
+                                            } else {
+                                                System.out.println(yellowText("The operation canceled :("));
+                                            }
+
+                                        } catch (Exception e) {
+                                            System.err.println("Error updating the book");
+                                        }
+                                        pressToContinue();
+                                        break;
+                                    // Update the book title
+                                    case 2:
+                                        try {
+                                            String newTitle = takeStringInputValue("Enter the new title: ");
+                                            bookReference.setTitle(newTitle);
+
+                                            boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
+                                            if (operationConfirmed) {
+                                                boolean bookUpdated = bookReferenceImp.update(bookReference);
+                                                if (bookUpdated) {
+                                                    System.out.println(greenText("Book updated successfully"));
+                                                } else {
+                                                    System.err.println(yellowText("Something wrong please try again"));
+                                                }
+                                            } else {
+                                                System.out.println(yellowText("The operation canceled :("));
+                                            }
+                                        } catch (Exception e) {
+                                            System.err.println("Error updating the book title");
+                                        }
+                                        pressToContinue();
+                                        break;
+                                    // Update the book author
+                                    case 3:
+                                        try {
+                                            String newAuthor = takeStringInputValue("Enter the new author: ");
+                                            bookReference.setAuthor(newAuthor);
+                                            boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
+                                            if (operationConfirmed) {
+                                                boolean bookUpdated = bookReferenceImp.update(bookReference);
+                                                if (bookUpdated) {
+                                                    System.out.println(greenText("Book updated successfully"));
+                                                } else {
+                                                    System.err.println(yellowText("Something wrong please try again"));
+                                                }
+                                            } else {
+                                                System.out.println(yellowText("The operation canceled :("));
+                                            }
+                                        } catch (Exception e) {
+                                            System.err.println("Error updating the book");
+                                        }
+                                        pressToContinue();
+                                        break;
+                                    // Update the quantity
+                                    case 4:
+                                        try {
+                                            int incrementQuantity = takeIntInputValue("Increment the quantity: ");
+                                            bookReference.incrementQuantity(incrementQuantity);
+                                            boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
+                                            if (operationConfirmed) {
+                                                boolean bookUpdated = bookReferenceImp.update(bookReference);
+                                                if (bookUpdated) {
+                                                    System.out.println(greenText("Book quantity updated successfully"));
+                                                } else {
+                                                    System.err.println(yellowText("Something wrong please try again"));
+                                                }
+                                            } else {
+                                                System.out.println(yellowText("The operation canceled :("));
+                                            }
+                                        } catch (Exception e) {
+                                            System.err.println("Error updating the book quantity");
+                                        }
+                                        pressToContinue();
+                                        break;
+                                    default:
+                                        break;
                                 }
                             } catch (Exception e) {
                                 System.err.println("An error occurred => " + e.getMessage());
@@ -206,7 +212,7 @@ public class Application {
                             try {
                                 boolean exist = BookReferenceImplementation.isBookReferenceExist(isbn);
                                 if (exist) {
-                                    boolean operationConfirmed = confirmation("Confirm the delete operation(Y/N)");
+                                    boolean operationConfirmed = confirmation(yellowText("Confirm the delete operation(Y/N)"));
                                     if (operationConfirmed) {
                                         if (bookReferenceImp.delete(isbn)) {
                                             System.out.println(greenText("The book deleted successfully :)"));
@@ -231,7 +237,7 @@ public class Application {
                 // Members management
                 case 2:
                     MEMBER_MENU();
-                    choice = takeUserChoice();
+                    choice = takeUserChoice(1, 3);
                     switch (choice) {
                         // ADD A MEMBER
                         case 1:
@@ -240,7 +246,7 @@ public class Application {
                                 System.out.println("Your Member Info");
                                 System.out.println(member.toString());
 
-                                if (confirmation("Agree to save the member(Y/N)?")) {
+                                if (confirmation(yellowText("Agree to save the member(Y/N)?"))) {
                                     if (memberImp.add(member)) {
                                         System.out.println(greenText("The member saved successfully :)"));
                                     } else {
@@ -257,8 +263,14 @@ public class Application {
                             break;
                         // UPDATE A MEMBER
                         case 2:
-                            String phoneNumber = takeStringInputValue("Enter The Member Phone Number to update: ");
+
+
                             try {
+                                // Take the borrower phone number
+                                String phoneNumber = takePhoneNumber();
+                                if (phoneNumber == null) {
+                                    break;
+                                }
                                 boolean isMemberExist = memberImp.getMemberByPhone(phoneNumber) != null;
                                 if (isMemberExist) {
                                     member = new Member(memberImp.getMemberByPhone(phoneNumber));
@@ -276,7 +288,7 @@ public class Application {
                                                 member.setPhoneNumber(newPhoneNumber);
                                                 member.setAddress(newAddress);
 
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
+                                                boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
                                                 if (operationConfirmed) {
                                                     if (memberImp.update(member)) {
                                                         System.out.println(greenText("Member updated successfully"));
@@ -298,7 +310,7 @@ public class Application {
                                                 String newName = takeStringInputValue("Enter the new title: ");
                                                 member.setName(newName);
 
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
+                                                boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
                                                 if (operationConfirmed) {
                                                     if (memberImp.update(member)) {
                                                         System.out.println(greenText("Member name updated successfully"));
@@ -318,7 +330,7 @@ public class Application {
                                             try {
                                                 String newPhoneNumber = takeStringInputValue("Enter the new author: ");
                                                 member.setPhoneNumber(newPhoneNumber);
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
+                                                boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
                                                 if (operationConfirmed) {
                                                     if (memberImp.update(member)) {
                                                         System.out.println(greenText("Member phone number updated successfully"));
@@ -338,7 +350,7 @@ public class Application {
                                             try {
                                                 String newAddress = takeStringInputValue("Enter the new member address: ");
                                                 member.setAddress(newAddress);
-                                                boolean operationConfirmed = confirmation("Confirm the update operation(Y/N)?: ");
+                                                boolean operationConfirmed = confirmation(yellowText("Confirm the update operation(Y/N)?: "));
                                                 if (operationConfirmed) {
                                                     if (memberImp.update(member)) {
                                                         System.out.println(greenText("Member address updated successfully"));
@@ -368,11 +380,11 @@ public class Application {
                             break;
                         // Delete An Existing Member
                         case 3:
-                            phoneNumber = takeStringInputValue("Enter The Member Phone Number to delete: ");
+                            String phoneNumber = takeStringInputValue("Enter The Member Phone Number to delete: ");
                             try {
                                 boolean isMemberExist = memberImp.getMemberByPhone(phoneNumber) != null;
                                 if (isMemberExist) {
-                                    boolean operationConfirmed = confirmation("Confirm the delete operation(Y/N)");
+                                    boolean operationConfirmed = confirmation(yellowText("Confirm the delete operation(Y/N)"));
                                     if (operationConfirmed) {
                                         member = new Member(memberImp.getMemberByPhone(phoneNumber));
                                         if (memberImp.delete(member.getId())) {
@@ -404,7 +416,7 @@ public class Application {
                             bookReference = bookReferenceImp.getBookReference(isbn);
                             if (bookReference == null) {
                                 System.out.println(yellowText("No book found with this isbn in this library..!, try another one."));
-                                if (confirmation("Cancel the operation(Y/N)?")) {
+                                if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
                                     break;
                                 }
                             } else {
@@ -417,23 +429,176 @@ public class Application {
                     }
                     pressToContinue();
                     break;
-                // Borrow A Book
+                // Display Books
+                case 4:
+                    try {
+                        DISPLAY_BOOK_MENU();
+                        choice = takeUserChoice(1, 4);
+                        switch (choice) {
+                            // All books:
+                            case 1:
+                                try {
+                                    List<BookReference> booksBookReferences = bookReferenceImp.getBooksReference();
+                                    for (BookReference bookReference : booksBookReferences) {
+                                        System.out.println(bookReference.toString());
+
+                                        System.out.println(greenText("---------------"));
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                                pressToContinue();
+                                break;
+                            // By Status
+                            case 2:
+                                try {
+                                    DISPLAY_BOOK_BY_STATUS_MENU();
+                                    // take the status
+                                    choice = takeUserChoice(1, 3);
+                                    switch (choice) {
+                                        // Available
+                                        case 1:
+                                            try {
+                                                List<BookReference> booksBookReferences = bookReferenceImp.getAvailableBooks();
+                                                for (BookReference bookReference : booksBookReferences) {
+                                                    System.out.println(bookReference.toString());
+
+                                                    System.out.println(greenText("---------------"));
+                                                }
+                                            } catch (Exception e) {
+                                                System.out.println(yellowText(e.getMessage()));
+                                            }
+                                            break;
+                                        // Borrowed
+                                        case 2:
+                                            try {
+                                                List<BookReference> booksBookReferences = bookReferenceImp.getBorrowedBookReferences();
+                                                if (booksBookReferences.size() > 0){
+                                                    for (BookReference bookReference : booksBookReferences) {
+                                                        System.out.println(bookReference.toString());
+                                                        System.out.println(greenText("---------------"));
+                                                    }
+                                                    System.out.println("more details");
+                                                    List<BorrowedBook> borrowedBooks = borrowedBookImp.getBorrowedBooks();
+                                                    for (BorrowedBook borrowedBook : borrowedBooks) {
+                                                        System.out.println(borrowedBook.toString());
+                                                        System.out.println(greenText("---------------"));
+                                                    }
+                                                }else{
+                                                    System.out.println(yellowText("No borrowed books for the moment"));
+                                                }
+                                            } catch (Exception e) {
+                                                System.out.println(yellowText(e.getMessage()));
+                                            }
+                                            break;
+                                        // Lost
+                                        case 3:
+                                            try {
+                                                List<BookReference> booksBookReferences = bookReferenceImp.getLostBookReferences();
+                                                for (BookReference bookReference : booksBookReferences) {
+                                                    System.out.println(bookReference.toString());
+                                                    System.out.println(greenText("---------------"));
+                                                }
+                                            } catch (Exception e) {
+                                                System.out.println(yellowText(e.getMessage()));
+                                            }
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                                pressToContinue();
+                                break;
+                                // By Title
+                            case 3:
+                                try {
+                                    do {
+                                        String title = takeStringInputValue("Enter the book title: ");
+                                        bookReference = bookReferenceImp.getBookReferenceByTitle(title);
+                                        if (bookReference == null){
+                                            System.out.println(yellowText("No book found with this title!"));
+                                            if (!confirmation(yellowText("Try with another title(Y/N)?"))){
+                                                break;
+                                            }
+                                        }
+                                    }while (bookReference == null);
+
+                                    System.out.println(greenText(bookReference.toString()));
+                                }catch (Exception e){
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                                break;
+                            // By Author
+                            case 4:
+                                try {
+                                    do {
+                                        String author = takeStringInputValue("Enter the book author: ");
+                                        bookReference = bookReferenceImp.getBookReferenceByAuthor(author);
+                                        if (bookReference == null){
+                                            System.out.println(yellowText("No book found with this author!"));
+                                            if (!confirmation(yellowText("Try with another title(Y/N)?"))){
+                                                break;
+                                            }
+                                        }
+                                    }while (bookReference == null);
+
+                                    System.out.println(greenText(bookReference.toString()));
+                                }catch (Exception e){
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println(yellowText(e.getMessage()));
+                    }
+                    break;
+                // Display Members
                 case 5:
                     try {
-                        // Take the borrower phone number
-                        String phoneNumber;
-                        do {
-                            phoneNumber = takeStringInputValue("Enter The Member phone number: ");
-                            member = memberImp.getMemberByPhone(phoneNumber);
-                            if (member == null) {
-                                System.out.println(yellowText("This phone number not exist!, try another one."));
-                                if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
-                                    break;
-                                }
-                            }
+                        DISPLAY_MEMBER_MENU();
+                        choice = takeUserChoice(1, 2);
+                        switch (choice) {
+                            // All members:
+                            case 1:
+                                try {
+                                    List<Member> members = memberImp.getMembers();
+                                    for (Member member : members) {
+                                        System.out.println(member.toString());
 
-                        } while (member == null);
-                        if (member == null) {
+                                        System.out.println(greenText("---------------"));
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                                pressToContinue();
+                                break;
+                            case 2:
+                                try {
+                                    String phone = takePhoneNumber();
+                                    if (phone != null) {
+                                        member = memberImp.getMemberByPhone(phone);
+                                        System.out.println(greenText(member.toString()));
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println(yellowText(e.getMessage()));
+                                }
+                            default:
+                                break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println(yellowText(e.getMessage()));
+                    }
+                    break;
+                // Borrow A Book
+                case 6:
+                    try {
+                        // Take the borrower phone number
+                        String phoneNumber = takePhoneNumber();
+                        if (phoneNumber == null) {
                             break;
                         }
 
@@ -463,7 +628,13 @@ public class Application {
                             // get the 1st book you will meet in the books table with the given ISBN and available status.
                             book = new Book(BookImplementation.getAvailableBookByISBN(isbn));
 
-                            int borrowingDays = takeIntInputValue("Enter the borrowing days: ");
+                            int borrowingDays;
+                            do {
+                                borrowingDays = takeIntInputValue("Enter the borrowing days: ");
+                                if (borrowingDays < 1) {
+                                    System.out.println(yellowText("Enter a positive value"));
+                                }
+                            } while (borrowingDays < 1);
 
                             System.out.println("Borrow the following book: ");
                             System.out.println(greenText(book.toString()));
@@ -471,11 +642,10 @@ public class Application {
                             System.out.println("To the following member: ");
                             System.out.println(greenText(member.toString()));
 
-                            if (confirmation("\nConfirm the borrowing operation(Y/N)?")) {
-                                if(borrowedBookImp.add(member.getId(), book.getId(), borrowingDays)){
+                            if (confirmation(yellowText("\nConfirm the borrowing operation(Y/N)?"))) {
+                                if (borrowedBookImp.add(member.getId(), book.getId(), borrowingDays)) {
                                     System.out.println(greenText("The borrowed successfully :)"));
-                                }
-                                else {
+                                } else {
                                     System.out.println(yellowText("Something is wrong, Call MR.PM :)"));
                                 }
                             } else {
@@ -491,21 +661,14 @@ public class Application {
                         System.out.println(yellowText(e.getMessage()));
                     }
                     break;
-                case 6:
+                // Return a book
+                case 7:
                     try {
                         // Take the borrower phone number
-                        String phoneNumber;
-                        do {
-                            phoneNumber = takeStringInputValue("Enter The Member phone number: ");
-                            member = memberImp.getMemberByPhone(phoneNumber);
-                            if (member == null) {
-                                System.out.println(yellowText("This phone number not exist!, try another one."));
-                                if (confirmation("Cancel the operation(Y/N)?")) {
-                                    break;
-                                }
-                            }
-
-                        } while (member == null);
+                        String phoneNumber = takePhoneNumber();
+                        if (phoneNumber == null) {
+                            break;
+                        }
 
                         // Check if the member borrowing any book
                         if (!(memberImp.hasBook(member))) {
@@ -525,7 +688,7 @@ public class Application {
 
                         System.out.println("\nfrom the following member");
                         System.out.println(greenText(member.toString()));
-                        if (confirmation("\nConfirm the operation(Y/N)?")) {
+                        if (confirmation(yellowText("\nConfirm the operation(Y/N)?"))) {
                             // return the book
                             if (borrowedBookImp.delete(borrowedBook.getId())) {
                                 System.out.println(greenText("The book returned successfully :)"));
@@ -540,14 +703,42 @@ public class Application {
                     }
                     pressToContinue();
                     break;
+                // Generate a report
                 case 8:
+                    String statistics =  bookImp.generateReport();
+                    System.out.println(yellowText(statistics));
+                    pressToContinue();
+                    break;
+                case 9:
                     System.out.println("THANKS FOR THE VISIT...!");
                     break;
                 default:
                     System.out.println("Invalid choice.");
             }
-        } while (choice != 8);
+        } while (choice != 9);
         scanner.close();
+    }
+
+    private static String takePhoneNumber() {
+        try {
+            String phoneNumber;
+            do {
+                phoneNumber = takeStringInputValue("Enter The Member phone number: ");
+                member = memberImp.getMemberByPhone(phoneNumber);
+                if (member == null) {
+                    System.out.println(yellowText("This phone number not exist!, try another one."));
+                    if (confirmation(yellowText("Cancel the operation(Y/N)?"))) {
+                        return null;
+                    }
+                } else {
+                    return phoneNumber;
+                }
+
+            } while (member == null);
+        } catch (Exception e) {
+            System.out.println(yellowText(e.getMessage()));
+        }
+        return null;
     }
 
     public static boolean confirmation(String confirmationMessage) {
@@ -573,7 +764,7 @@ public class Application {
     }
 
     //    PROGRAM HELPERS METHODS
-    public static int takeUserChoice() {
+    public static int takeUserChoice(int min, int max) {
         int choice = -1;
         do {
             try {
@@ -585,7 +776,7 @@ public class Application {
                 choice = -1;
                 System.out.println(yellowText("Invalid input, must be a number !"));
             }
-        } while (choice < 1 || choice > 8);
+        } while (choice < min || choice > max);
         return choice;
     }
 
@@ -646,38 +837,38 @@ public class Application {
                         "1- Books Management\n" +
                         "2- Members Management\n" +
                         "3- Get a Book By ISBN\n" +
-                        "4- Display a Book\n" +
-                        "5- Borrow a book\n" +
-                        "6- Return a book\n" +
-                        "7- Generate a book\n" +
-                        "8- Exit\n"
+                        "4- Display Books\n" +
+                        "5- Display Members\n" +
+                        "6- Borrow a book\n" +
+                        "7- Return a book\n" +
+                        "8- Generate a report\n" +
+                        "9- Exit\n"
         );
     }
 
     public static void BOOK_MENU() {
-        System.out.println(
-                "1- Add\n" +
-                        "2- Update\n" +
-                        "3- Delete\n"
+        System.out.println(yellowText(
+                "\t1- Add\n" +
+                        "\t2- Update\n" +
+                        "\t3- Delete\n")
         );
     }
 
     public static void UPDATE_BOOK_MENU() {
         System.out.println(
-                "Update: \n" +
-                        "1- All info\n" +
-                        "2- title\n" +
-                        "3- author\n" +
-                        "4- quantity\n"
+                greenText("\t\t1- All info\n" +
+                        "\t\t2- title\n" +
+                        "\t\t3- author\n" +
+                        "\t\t4- quantity\n")
         );
     }
 
     //    MEMBERS---------------------------------------------
     public static void MEMBER_MENU() {
-        System.out.println(
-                "1- Add\n" +
-                        "2- Update\n" +
-                        "3- Delete\n"
+        System.out.println(yellowText(
+                "\t1- Add\n" +
+                        "\t2- Update\n" +
+                        "\t3- Delete\n")
         );
     }
 
@@ -698,13 +889,36 @@ public class Application {
     }
 
     public static void UPDATE_MEMBER_MENU() {
-        System.out.println(
-                "Update: \n" +
-                        "1- All info\n" +
-                        "2- name\n" +
-                        "3- phone number\n" +
-                        "4- address\n"
+        System.out.println(greenText(
+                "\t\t1- All info\n" +
+                        "\t\t2- name\n" +
+                        "\t\t3- phone number\n" +
+                        "\t\t4- address\n")
         );
+    }
+
+    public static void DISPLAY_BOOK_MENU() {
+        System.out.println(yellowText(
+                "\t1- All books\n" +
+                        "\t2- By Status\n" +
+                        "\t3- By Title\n" +
+                        "\t4- By Author\n")
+        );
+    }
+
+    public static void DISPLAY_MEMBER_MENU() {
+        System.out.println(yellowText(
+                "\t1- All members\n" +
+                        "\t2- By phone\n"
+        ));
+    }
+
+    public static void DISPLAY_BOOK_BY_STATUS_MENU() {
+        System.out.println(greenText(
+                "\t\t1- Available\n" +
+                        "\t\t2- Borrowed\n" +
+                        "\t\t3- Lost\n"
+        ));
     }
 
 }

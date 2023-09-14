@@ -55,10 +55,9 @@ public class Book {
     }
     @Override
     public String toString() {
-        return "ISBN: " + this.isbn +
-                "\t Title: " + this.id +
-                "\t Author: " + this.isbn +
-                "\t Quantity: " + this.status;
+        return "id: " + this.id +
+                "\t ISBN: " + this.isbn +
+                "\t status: " + this.status;
     }
 
 }
